@@ -182,6 +182,23 @@
     }
 
     function update() {
+        
+        if(input.keys.shift)
+        {
+        	if (input.keys.w) {
+            	moveCamera("up",1);
+	        } 
+	        else if (input.keys.s) {
+	            moveCamera("down",1);
+	        }
+	     	else if (input.keys.a) {
+            moveCamera("left",1);
+	        } 
+	        else if (input.keys.d) {
+	            moveCamera("right",1);
+	        }
+        }
+
         if (input.keys.w) {
             moveCamera("up");
         } else if (input.keys.s) {
@@ -206,7 +223,7 @@
         renderer.render(scene, camera);
     }
 
-    function moveCamera(direction, delta) {
+    function moveCamera(direction, num, delta) {
 
         var collides = false;
         var position = {
@@ -215,7 +232,9 @@
         };
         var rotationY = camera.rotation.y;
         var rotationX = camera.rotation.x;
-        var offset = 50;
+        
+        if(num==1)var offset = 50;
+        else var offset = 40;
 
         if(typeof direction == "object"){
             rotationY -= ((direction.movementX / renderer.domElement.clientWidth) * 2)/ scale;
