@@ -8,6 +8,7 @@
     var running = true;
     var scale = 1;
     var ai = [];
+    var aix = 1,aiz = 0;
 
     function launch() {
         initializeScene();
@@ -179,6 +180,8 @@
 					o.position.set(position.x, position.y, position.z);
 					ai.push(o);
 					scene.add(o);
+
+                    console.log(position);
                 }
 
                 miniMap.draw(x, y, map[y][x]);
@@ -228,31 +231,99 @@
         }
 
     }
-
     function draw() {
 
 		var aispeed = 1;
 
-    	for (var i = ai.length-1; i >= 0; i--) {
+    for (var i = ai.length-1; i >= 0; i--) {
+        var collides = false;
 		var a = ai[i];
 		// Move AI
-		var r = Math.random();
-		if (r > 0.995) {
-			a.lastRandomX = Math.random() * 2 - 1;
-			a.lastRandomZ = Math.random() * 2 - 1;
-		}
-		a.translateX(aispeed * a.lastRandomX);
-		a.translateZ(aispeed * a.lastRandomZ);
-		if (a.position.x < 0 || a.position.x >= map.length || a.position.y < 0 || a.position.y >= map[0].length || (map[y][x] != 1 && !isNaN(map[y][x]))) {
-			a.translateX(-2 * aispeed * a.lastRandomX);
-			a.translateZ(-2 * aispeed * a.lastRandomZ);
-			a.lastRandomX = Math.random() * 2 - 1;
-			a.lastRandomZ = Math.random() * 2 - 1;
-		}
-		if (a.position.x < -1 || a.position.x > map.length || a.position.z < -1 || a.position.z > map[0].length) {
-			//ai.splice(i, 1);
-			//scene.remove(a);
-		}
+        var position = {
+            x: a.position.x + 1 * aix,
+            z: a.position.z + 1 * aiz
+        };
+         // Current position on the map
+        var tx = Math.abs(Math.floor(((cameraHelper.origin.x + (a.position.x * -1)) / 100)));
+        var ty = Math.abs(Math.floor(((cameraHelper.origin.z + (a.position.z * -1)) / 100)));
+
+        // next position
+        var newTx = Math.abs(Math.floor(((cameraHelper.origin.x + (position.x * -1) + (10)) / 100)));
+        var newTy = Math.abs(Math.floor(((cameraHelper.origin.z + (position.z * -1) + (10)) / 100)));
+
+        // Stay on the map
+        if (newTx >= map[0].length) {
+            newTx = map[0].length;
+        }
+        if (newTx < 0) {
+            newTx = 0;
+        }
+        if (newTy >= map.length) {
+            newTy = map.length;
+        }
+        if (newTy < 0) {
+            newTy = 0;
+        }
+
+        if (map[newTy][newTx] != 1 && !isNaN(map[newTy][newTx])) {
+
+            collides = true;
+            var r = Math.floor(Math.random() * (4 - 0) + 0);
+            switch(r){
+                case 1 :
+                    aix = 1;
+                    aiz = 0;
+                    break;
+                case 2 :
+                    aix = -1;
+                    aiz = 0;
+                    break;
+                case 3 :
+                    aix = 0;
+                    aiz = 1;
+                    break;
+                case 4 :
+                    aix = 0;
+                    aiz = -1;
+                    break;
+            }
+
+        }
+        else if(map[ty+1][tx] == (1 - Math.abs(aix))|| map[ty-1][tx] == (1 - Math.abs(aix)) || map[ty][tx+1] == (1 - Math.abs(aiz)) || map[ty][tx-1] == (1 - Math.abs(aiz))){
+            var r = Math.floor(Math.random() * (4 - 0) + 0);
+            //seizure disini
+            switch(r){
+                case 1 :
+                    aix = 1;
+                    aiz = 0;
+                    break;
+                case 2 :
+                    aix = -1;
+                    aiz = 0;
+                    break;
+                case 3 :
+                    aix = 0;
+                    aiz = 1;
+                    break;
+                case 4 :
+                    aix = 0;
+                    aiz = -1;
+                    break;
+            }
+        }
+
+        if (collides == false) {
+            a.position.x = position.x;
+            a.position.z = position.z;
+
+            // miniMap.update({
+            //     x: newTx,
+            //     y: newTy
+            // });
+        } else {
+            //nabrak
+        }
+
 	}
 
         renderer.render(scene, camera);
