@@ -40,11 +40,8 @@ game.Gui.MiniMap = function(width, height, parent) {
         if (id == 1) {
             this.ctx.fillStyle = "white";
         } else if (id == 'D') {
-<<<<<<< Updated upstream
             this.ctx.fillStyle = "black";
-=======
             this.ctx.fillStyle = "blue";
->>>>>>> Stashed changes
             this.playerPosition = {
                 x: x,
                 y: y
