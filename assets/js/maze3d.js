@@ -1,43 +1,34 @@
+(function() {
+    var width = window.innerWidth * 0.995;
+    var height = window.innerHeight * 0.995;
+    var canvasContainer = document.getElementById("canvasContainer");
+    var renderer, camera, scene;
+    var input, miniMap, levelHelper, CameraHelper;
+    var map = new Array();
+    var running = true;
+    var scale = 1;
 
-
-var width = window.innerWidth * 0.995;
-var height = window.innerHeight * 0.995;
-var canvasContainer = document.getElementById("canvas");
-var renderer, camera, scene;
-var input, miniMap, CameraHelper;
-var map = new Array();
-var running = true;
-var elem = document.documentElement;
-var level = 1;
-
-window.onload = function() {
-        initializeEngine();
-        loadLevel(1);
-    };
-
-
-
-function loadLevel(maplevel) {
-        var ajax = new XMLHttpRequest();
-        ajax.open("GET", "maps/level" + maplevel + ".json", true);
-        ajax.onreadystatechange = function() {
-            if (ajax.readyState == 4) {
-                map = JSON.parse(ajax.responseText);
-                launch();
-            }
-        }
-        ajax.send(null);
-    }
-
-
-
-function launch() {
+    function launch() {
         initializeScene();
         mainLoop();
     }
 
+    window.onload = function() {
+        initializeEngine();
 
-function initializeEngine() {
+        var level = 1; // Get parameter
+        if (level > 0 || level <= levelHelper.count) {
+            levelHelper.current = level;
+            levelHelper.next = level + 1;
+            loadLevel(level);
+        } else {
+            levelHelper.current = 1;
+            levelHelper.next = 2;
+            loadLevel(1);
+        }
+    };
+
+    function initializeEngine() {
         renderer = new THREE.WebGLRenderer({
             antialias: true
         });
@@ -50,26 +41,45 @@ function initializeEngine() {
 
         camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
         camera.position.y = 50;
+        camera.rotation.order = "YXZ"; // this is not the default
 
-        document.getElementById("canvas").appendChild(renderer.domElement);
+        document.getElementById("canvasContainer").appendChild(renderer.domElement);
 
-        input = new Demonixis.Input();
-        levelHelper = new Demonixis.GameHelper.LevelHelper();
-        cameraHelper = new Demonixis.GameHelper.CameraHelper(camera);
+        input = new game.Input();
+        levelHelper = new game.GameHelper.LevelHelper();
+        cameraHelper = new game.GameHelper.CameraHelper(camera);
 
         window.addEventListener("resize", function() {
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        
+        canvasContainer.requestPointerLock = canvasContainer.requestPointerLock || canvasContainer.mozRequestPointerLock;
+        document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+        canvasContainer.onclick = function() {
+          canvasContainer.requestPointerLock();
+        };
+        document.addEventListener('pointerlockchange', lockChangeAlert, false);
+        document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+        function lockChangeAlert() {
+        if (document.pointerLockElement === canvasContainer || document.mozPointerLockElement === canvasContainer) {
+            console.log('The pointer lock status is now locked');
+            document.addEventListener("mousemove", moveCamera, false);
+          } else {
+            console.log('The pointer lock status is now unlocked');  
+            document.removeEventListener("mousemove", moveCamera, false);
+          }
+        }
+        showMessage();
+    }
 
+    function showMessage(){
         var messageContainer = document.createElement("div");
         messageContainer.style.position = "absolute";
         messageContainer.style.backgroundColor = "#666";
         messageContainer.style.border = "1px solid #333";
 
         var message = document.createElement("h1");
-        message.innerHTML = "Use Up/Down/Left/Right to control, click to continue";
+        message.innerHTML = "Use W/A/S/D to move and arrow left/right rotate the camera. Click to enter fps mode";
         message.style.textAlign = "center";
         message.style.color = "#ddd";
         message.style.padding = "15px";
@@ -80,42 +90,44 @@ function initializeEngine() {
         messageContainer.style.left = (window.innerWidth / 2 - messageContainer.offsetWidth / 2) + "px";
         messageContainer.style.top = (window.innerHeight / 2 - messageContainer.offsetHeight / 2) + "px";
 
-        window.addEventListener("click", function() {
-            openFullscreen();
-            document.body.removeChild(messageContainer);
-
-        });
-
         var timer = setTimeout(function() {
             clearTimeout(timer);
             document.body.removeChild(messageContainer);
         }, 3500);
     }
 
-
- function initializeScene() {
-        //miniMap = new Demonixis.Gui.MiniMap(map[0].length, map.length, "canvasContainer");
-        //miniMap.create();
+    function initializeScene() {
+        miniMap = new game.Gui.MiniMap(map[0].length, map.length, "canvasContainer");
+        miniMap.create();
 
         var loader = new THREE.TextureLoader();
         var platformWidth = map[0].length * 100;
         var platformHeight = map.length * 100;
 
         var floorGeometry = new THREE.BoxGeometry(platformWidth, 5, platformHeight);
-        var ground = new THREE.Mesh(floorGeometry, new THREE.MeshPhongMaterial());
+        var ground = new THREE.Mesh(floorGeometry, new THREE.MeshPhongMaterial({
+            map: loader.load("assets/images/textures/ground_diffuse.jpg"),
+        }));
 
         repeatTexture(ground.material.map, 2);
 
         ground.position.set(-50, 1, -50);
         scene.add(ground);
 
-        var topMesh = new THREE.Mesh(floorGeometry, new THREE.MeshPhongMaterial());
+        var topMesh = new THREE.Mesh(floorGeometry, new THREE.MeshPhongMaterial({
+            map: loader.load("assets/images/textures/roof_diffuse.jpg")
+        }));
 
         repeatTexture(topMesh.material.map, 16);
 
         topMesh.position.set(-50, 100, -50);
         scene.add(topMesh);
 
+        var size = {
+            x: 100,
+            y: 100,
+            z: 100
+        };
 
         var position = { 
             x: 0, 
@@ -123,8 +135,10 @@ function initializeEngine() {
             z: 0 
         };
 
-        var wallGeometry = new THREE.BoxGeometry(100, 100, 100);
-        var wallMaterial = new THREE.MeshPhongMaterial();
+        var wallGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+        var wallMaterial = new THREE.MeshPhongMaterial({
+            map: loader.load("assets/images/textures/wall_diffuse.jpg")
+        });
 
         repeatTexture(wallMaterial.map, 2);
 
@@ -168,16 +182,22 @@ function initializeEngine() {
     }
 
     function update() {
-        if (input.keys.up) {
+        if (input.keys.w) {
             moveCamera("up");
-        } else if (input.keys.down) {
+        } else if (input.keys.s) {
             moveCamera("down");
         }
 
-        if (input.keys.left) {
+        if (input.keys.a) {
             moveCamera("left");
-        } else if (input.keys.right) {
+        } else if (input.keys.d) {
             moveCamera("right");
+        }
+
+        if (input.keys.left) {
+            moveCamera("cameraleft");
+        } else if (input.keys.right) {
+            moveCamera("cameraright");
         }
 
     }
@@ -186,41 +206,62 @@ function initializeEngine() {
         renderer.render(scene, camera);
     }
 
-
     function moveCamera(direction, delta) {
+
         var collides = false;
         var position = {
             x: camera.position.x,
             z: camera.position.z
         };
-        var rotation = camera.rotation.y;
+        var rotationY = camera.rotation.y;
+        var rotationX = camera.rotation.x;
         var offset = 50;
 
-        var moveParamaters = {
+        if(typeof direction == "object"){
+            rotationY -= ((direction.movementX / renderer.domElement.clientWidth) * 2)/ scale;
+            rotationX -= ((direction.movementY / renderer.domElement.clientHeight) * 2)/ scale;
+            direction = "cameraRotation";
+        }
+
+        var moveParameters = {
             translation: (typeof delta != "undefined") ? delta.translation : cameraHelper.translation,
             rotation: (typeof delta != "undefined") ? delta.rotation : cameraHelper.rotation
         };
 
         switch (direction) {
             case "up":
-                position.x -= Math.sin(-camera.rotation.y) * -moveParamaters.translation;
-                position.z -= Math.cos(-camera.rotation.y) * moveParamaters.translation;
+                position.x -= Math.sin(-camera.rotation.y) * -moveParameters.translation;
+                position.z -= Math.cos(-camera.rotation.y) * moveParameters.translation;
                 break;
             case "down":
-                position.x -= Math.sin(camera.rotation.y) * -moveParamaters.translation;
-                position.z += Math.cos(camera.rotation.y) * moveParamaters.translation;
+                position.x -= Math.sin(camera.rotation.y) * -moveParameters.translation;
+                position.z += Math.cos(camera.rotation.y) * moveParameters.translation;
                 break;
             case "left":
-                rotation += moveParamaters.rotation;
+                position.x += Math.cos(camera.rotation.y) * -moveParameters.translation;
+                position.z += Math.sin(camera.rotation.y) * moveParameters.translation;
+                //
                 break;
             case "right":
-                rotation -= moveParamaters.rotation;
+                position.x -= Math.cos(camera.rotation.y) * -moveParameters.translation;
+                position.z -= Math.sin(camera.rotation.y) * moveParameters.translation;
+                //
+                break;
+            case "cameraleft":
+                rotationY += moveParameters.rotation;
+                break;
+            case "cameraright":
+                rotationY -= moveParameters.rotation;
+                break;
+            case "cameraRotation":
                 break;
         }
 
+        // Current position on the map
         var tx = Math.abs(Math.floor(((cameraHelper.origin.x + (camera.position.x * -1)) / 100)));
         var ty = Math.abs(Math.floor(((cameraHelper.origin.z + (camera.position.z * -1)) / 100)));
 
+        // next position
         var newTx = Math.abs(Math.floor(((cameraHelper.origin.x + (position.x * -1) + (offset)) / 100)));
         var newTy = Math.abs(Math.floor(((cameraHelper.origin.z + (position.z * -1) + (offset)) / 100)));
 
@@ -241,11 +282,13 @@ function initializeEngine() {
         if (map[newTy][newTx] != 1 && !isNaN(map[newTy][newTx])) {
             collides = true;
         } else if (map[newTy][newTx] == "A") {
+            // Game is over
             running = false;
         }
 
         if (collides == false) {
-            camera.rotation.y = rotation;
+            camera.rotation.y = rotationY;
+            camera.rotation.x = rotationX;
             camera.position.x = position.x;
             camera.position.z = position.z;
 
@@ -254,10 +297,9 @@ function initializeEngine() {
                 y: newTy
             });
         } else {
-            document.getElementById("bumpSound").play();
+            //nabrak
         }
     }
-
 
     function mainLoop(time) {
         if (running) {
@@ -270,19 +312,30 @@ function initializeEngine() {
     }
 
     function endScreen() {
-        level=level+1;
-
-        if (level==2) {
+        if (levelHelper.isFinished || levelHelper.isMobile) {
             alert("Terima Kasih udah mainin FP kelompok kami");
         } else {
+            // Remove all childrens.
             for (var i = 0, l = scene.children.length; i < l; i++) {
                 scene.remove(scene.children[i]);
             }
             renderer.clear();
             scene = new THREE.Scene();
-            loadLevel(level);
+            loadLevel(levelHelper.getNext());
             running = true;
         }
+    }
+
+    function loadLevel(level) {
+        var ajax = new XMLHttpRequest();
+        ajax.open("GET", "assets/maps/maze3d-" + level + ".json", true);
+        ajax.onreadystatechange = function() {
+            if (ajax.readyState == 4) {
+                map = JSON.parse(ajax.responseText);
+                launch();
+            }
+        }
+        ajax.send(null);
     }
 
     function repeatTexture(texture, size) {
@@ -293,21 +346,4 @@ function initializeEngine() {
         return texture;
     }
 
-
-
-    function openFullscreen() {
-    if (elem.requestFullscreen) 
-    {
-        elem.requestFullscreen();
-    } 
-    else if (elem.mozRequestFullScreen) 
-    { /* Firefox */
-        elem.mozRequestFullScreen();
-    }  
-    else if (elem.webkitRequestFullscreen) 
-    { /* Chrome, Safari and Opera */
-    elem.webkitRequestFullscreen();
-    } 
-    else if (elem.msRequestFullscreen) { /* IE/Edge */
-    elem.msRequestFullscreen();
-    }}
+})();
