@@ -49,6 +49,8 @@ game.Gui.MiniMap = function(width, height, parent) {
             this.ctx.fillStype = "yellow";
         } else if (id == 'A') {
             this.ctx.fillStyle = "blue";
+        } else if (id == 'E') {
+            this.ctx.fillStyle = "blue";
         } else {
             this.ctx.fillStyle = "rgb(200, 200, 200)";
         }
