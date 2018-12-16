@@ -20,14 +20,14 @@ game.Gui.MiniMap = function(width, height, parent) {
 
     this.create = function(top, left, position, border) {
         var stylePosition = "position:absolute;";
-        var styleTop = (top || "10") + "px;";
+        var styleBottom = ("10") + "px;";
         var styleLeft = (left || "10") + "px;";
         var styleBorder = (border || "1px solid black") + ";";
 
         this.miniMap.setAttribute("width", this.width * this.blockSize.width);
         this.miniMap.setAttribute("height", this.height * this.blockSize.height);
         this.miniMap.setAttribute("id", "miniMap");
-        this.miniMap.setAttribute("style", stylePosition + "top:" + styleTop + "left:" + styleLeft + styleBorder);
+        this.miniMap.setAttribute("style", stylePosition + "bottom:" + styleBottom + "left:" + styleLeft + styleBorder);
 
         var domElement = document.getElementById(this.parent);
         if (domElement[0] != "undefined") {
@@ -40,7 +40,7 @@ game.Gui.MiniMap = function(width, height, parent) {
         if (id == 1) {
             this.ctx.fillStyle = "white";
         } else if (id == 'D') {
-            this.ctx.fillStyle = "red";
+            this.ctx.fillStyle = "black";
             this.playerPosition = {
                 x: x,
                 y: y
@@ -50,7 +50,7 @@ game.Gui.MiniMap = function(width, height, parent) {
         } else if (id == 'A') {
             this.ctx.fillStyle = "blue";
         } else if (id == 'E') {
-            this.ctx.fillStyle = "blue";
+            this.ctx.fillStyle = "red";
         } else {
             this.ctx.fillStyle = "rgb(200, 200, 200)";
         }
@@ -61,7 +61,7 @@ game.Gui.MiniMap = function(width, height, parent) {
     this.update = function(newPlayerPosition) {
         this.ctx.fillStyle = "white";
         this.ctx.fillRect(this.playerPosition.x * this.blockSize.width, this.playerPosition.y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
-        this.ctx.fillStyle = "blue";
+        this.ctx.fillStyle = "black";
         this.ctx.fillRect(newPlayerPosition.x * this.blockSize.width, newPlayerPosition.y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
         this.playerPosition = newPlayerPosition;
     };
