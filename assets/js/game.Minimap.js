@@ -40,7 +40,11 @@ game.Gui.MiniMap = function(width, height, parent) {
         if (id == 1) {
             this.ctx.fillStyle = "white";
         } else if (id == 'D') {
+<<<<<<< Updated upstream
             this.ctx.fillStyle = "black";
+=======
+            this.ctx.fillStyle = "blue";
+>>>>>>> Stashed changes
             this.playerPosition = {
                 x: x,
                 y: y
@@ -48,7 +52,7 @@ game.Gui.MiniMap = function(width, height, parent) {
         } else if (id == 'J') {
             this.ctx.fillStype = "yellow";
         } else if (id == 'A') {
-            this.ctx.fillStyle = "blue";
+            this.ctx.fillStyle = "green";
         } else if (id == 'E') {
             this.ctx.fillStyle = "red";
         } else {

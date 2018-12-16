@@ -7,6 +7,7 @@
     var map = new Array();
     var running = true;
     var scale = 1;
+    var ai = [];
 
     function launch() {
         initializeScene();
@@ -171,11 +172,12 @@
                     cameraHelper.origin.position.mapZ = 0;
                 }
 
-                if (map[x][y] === "E") {
+                if (map[y][x] === "E") {
                 	var aiMaterial = new THREE.MeshBasicMaterial({/*color: 0xEE3333,*/map: THREE.ImageUtils.loadTexture('assets/images/textures/face.png')});
 					var aiGeo = new THREE.CubeGeometry(40, 40, 40);
 					var o = new THREE.Mesh(aiGeo, aiMaterial);
-					o.position.set(position.x, 250 * 0.15, position.z);
+					o.position.set(position.x, position.y, position.z);
+					ai.push(o);
 					scene.add(o);
                 }
 
@@ -228,6 +230,31 @@
     }
 
     function draw() {
+
+		var aispeed = 1;
+
+    	for (var i = ai.length-1; i >= 0; i--) {
+		var a = ai[i];
+		// Move AI
+		var r = Math.random();
+		if (r > 0.995) {
+			a.lastRandomX = Math.random() * 2 - 1;
+			a.lastRandomZ = Math.random() * 2 - 1;
+		}
+		a.translateX(aispeed * a.lastRandomX);
+		a.translateZ(aispeed * a.lastRandomZ);
+		if (a.position.x < 0 || a.position.x >= map.length || a.position.y < 0 || a.position.y >= map[0].length || (map[y][x] != 1 && !isNaN(map[y][x]))) {
+			a.translateX(-2 * aispeed * a.lastRandomX);
+			a.translateZ(-2 * aispeed * a.lastRandomZ);
+			a.lastRandomX = Math.random() * 2 - 1;
+			a.lastRandomZ = Math.random() * 2 - 1;
+		}
+		if (a.position.x < -1 || a.position.x > map.length || a.position.z < -1 || a.position.z > map[0].length) {
+			//ai.splice(i, 1);
+			//scene.remove(a);
+		}
+	}
+
         renderer.render(scene, camera);
     }
 
