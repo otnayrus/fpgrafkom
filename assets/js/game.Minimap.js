@@ -46,7 +46,6 @@ game.Gui.MiniMap = function(width, height, parent) {
             this.ctx.fillStyle = "white";
         } else if (id == 'D') {
             this.ctx.fillStyle = "black";
-            this.ctx.fillStyle = "blue";
             this.playerPosition = {
                 x: x,
                 y: y
@@ -80,7 +79,8 @@ game.Gui.MiniMap = function(width, height, parent) {
         this.ctx.fillRect(this.enemyPosition.x[num] * this.blockSize.width, this.enemyPosition.y[num] * this.blockSize.height, this.blockSize.width, this.blockSize.height);
         this.ctx.fillStyle = "red";
         this.ctx.fillRect(newEnemyPosition.x * this.blockSize.width, newEnemyPosition.y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
-        this.enemyPosition[num] = newEnemyPosition;
+        this.enemyPosition.x[num] = newEnemyPosition.x;
+        this.enemyPosition.y[num] = newEnemyPosition.y;
     };
 
     this.drawAt = function(x, y, color) {
