@@ -29,7 +29,7 @@
         } else {
             levelHelper.current = 1;
             levelHelper.next = 2;
-            loadLevel(1);
+            loadLevel();
         }
     };
 
@@ -511,8 +511,9 @@
 	}
 
     function loadLevel(level) {
+    	var r = Math.floor(Math.random() * 3) + 1;
         var ajax = new XMLHttpRequest();
-        ajax.open("GET", "assets/maps/maze3d-" + level + ".json", true);
+        ajax.open("GET", "assets/maps/maze3d-" + r + ".json", true);
         ajax.onreadystatechange = function() {
             if (ajax.readyState == 4) {
                 map = JSON.parse(ajax.responseText);
