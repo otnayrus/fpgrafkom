@@ -8,7 +8,10 @@
     var running = true;
     var scale = 1;
     var ai = [];
+    bullets = [];
     var aix = 1,aiz = 0;
+    var mouse = { x: 0, y: 0 };
+    var projector = new THREE.Projector();
 
     function launch() {
         initializeScene();
@@ -71,6 +74,14 @@
             document.removeEventListener("mousemove", moveCamera, false);
           }
         }
+
+		document.addEventListener("click", function(e){
+		    e.preventDefault;
+		    if (e.which === 1) { // Left click only
+			createBullet();
+		}
+		}); 
+
         showMessage();
     }
 
@@ -233,7 +244,42 @@
     }
     function draw() {
 
-		var aispeed = 1;
+    for (var i = bullets.length-1; i >= 0; i--) {
+		var b = bullets[i], p = b.position, d = b.ray.direction;
+
+		var tx = Math.abs(Math.floor(((cameraHelper.origin.x + (b.position.x * -1)) / 100)));
+        var ty = Math.abs(Math.floor(((cameraHelper.origin.z + (b.position.z * -1)) / 100)));
+
+		if (map[ty][tx] == 2) {
+			bullets.splice(i, 1);
+			scene.remove(b);
+			continue;
+		}
+		// Collide with AI
+		var hit = false;
+		for (var j = ai.length-1; j >= 0; j--) {
+			var a = ai[j];
+			var v = a.geometry.vertices[0];
+			var c = a.position;
+			var x = Math.abs(v.x), z = Math.abs(v.z);
+			//console.log(Math.round(p.x), Math.round(p.z), c.x, c.z, x, z);
+			if (p.x < c.x + x && p.x > c.x - x &&
+					p.z < c.z + z && p.z > c.z - z &&
+					b.owner != a) {
+				bullets.splice(i, 1);
+				scene.remove(b);
+				ai.splice(j,1);
+				scene.remove(a);
+				hit = true;
+				break;
+			}
+		}
+		if (!hit) {
+			b.translateX(2 * d.x);
+			//bullets[i].translateY(speed * bullets[i].direction.y);
+			b.translateZ(2 * d.z);
+		}
+	}
 
     for (var i = ai.length-1; i >= 0; i--) {
         var collides = false;
@@ -460,6 +506,12 @@
         }
     }
 
+    function onDocumentMouseMove(e) {
+		e.preventDefault();
+		mouse.x = (e.clientX / WIDTH) * 2 - 1;
+		mouse.y = - (e.clientY / HEIGHT) * 2 + 1;
+	}
+
     function loadLevel(level) {
         var ajax = new XMLHttpRequest();
         ajax.open("GET", "assets/maps/maze3d-" + level + ".json", true);
@@ -480,25 +532,35 @@
         return texture;
     }
 
-    function addAI() {
-		var c = getMapSector(cam.position);
-		var aiMaterial = new t.MeshBasicMaterial({/*color: 0xEE3333,*/map: t.ImageUtils.loadTexture('images/face.png')});
-		var o = new t.Mesh(aiGeo, aiMaterial);
-		do {
-			var x = getRandBetween(0, mapW-1);
-			var z = getRandBetween(0, mapH-1);
-		} while (map[x][z] > 0 || (x == c.x && z == c.z));
-		x = Math.floor(x - mapW/2) * UNITSIZE;
-		z = Math.floor(z - mapW/2) * UNITSIZE;
-		o.position.set(x, UNITSIZE * 0.15, z);
-		o.health = 100;
-		//o.path = getAIpath(o);
-		o.pathPos = 1;
-		o.lastRandomX = Math.random();
-		o.lastRandomZ = Math.random();
-		o.lastShot = Date.now(); // Higher-fidelity timers aren't a big deal here.
-		ai.push(o);
-		scene.add(o);
+
+    function createBullet(obj) {
+		
+		obj = camera;
+		
+		var sphere = new THREE.Mesh(new THREE.SphereGeometry(2,6,6), new THREE.MeshBasicMaterial({color: 0x333333}));
+		sphere.position.set(obj.position.x, obj.position.y * 0.8, obj.position.z);
+
+		if (obj instanceof THREE.Camera) {
+			var vector = new THREE.Vector3(mouse.x, mouse.y, 1);
+			projector.unprojectVector(vector, obj);
+			sphere.ray = new THREE.Ray(
+					obj.position,
+					vector.sub(obj.position).normalize()
+			);
+		}
+		else {
+			var vector = cam.position.clone();
+			sphere.ray = new THREE.Ray(
+					obj.position,
+					vector.subSelf(obj.position).normalize()
+			);
+		}
+		sphere.owner = obj;
+		
+		bullets.push(sphere);
+		scene.add(sphere);
+		
+		return sphere;
 	}
 
 })();
