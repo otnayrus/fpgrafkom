@@ -316,10 +316,10 @@
             a.position.x = position.x;
             a.position.z = position.z;
 
-            // miniMap.update({
-            //     x: newTx,
-            //     y: newTy
-            // });
+             miniMap.updateEnemy(i,{
+                 x: newTx,
+                 y: newTy
+             });
         } else {
             //nabrak
         }

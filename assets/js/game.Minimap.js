@@ -15,6 +15,11 @@ game.Gui.MiniMap = function(width, height, parent) {
         y: 0
     };
 
+    this.enemyPosition = {
+        x: [],
+        y: []
+    };
+
     this.miniMap = document.createElement("canvas");
     this.ctx = this.miniMap.getContext("2d");
 
@@ -52,6 +57,8 @@ game.Gui.MiniMap = function(width, height, parent) {
             this.ctx.fillStyle = "green";
         } else if (id == 'E') {
             this.ctx.fillStyle = "red";
+            this.enemyPosition.x.push(x);
+            this.enemyPosition.y.push(y);
         } else {
             this.ctx.fillStyle = "rgb(200, 200, 200)";
         }
@@ -65,6 +72,15 @@ game.Gui.MiniMap = function(width, height, parent) {
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(newPlayerPosition.x * this.blockSize.width, newPlayerPosition.y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
         this.playerPosition = newPlayerPosition;
+    };
+
+    this.updateEnemy = function(num,newEnemyPosition) {
+        //window.alert(this.enemyPosition.x.length);
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(this.enemyPosition.x[num] * this.blockSize.width, this.enemyPosition.y[num] * this.blockSize.height, this.blockSize.width, this.blockSize.height);
+        this.ctx.fillStyle = "red";
+        this.ctx.fillRect(newEnemyPosition.x * this.blockSize.width, newEnemyPosition.y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
+        this.enemyPosition[num] = newEnemyPosition;
     };
 
     this.drawAt = function(x, y, color) {
