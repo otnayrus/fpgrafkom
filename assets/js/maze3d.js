@@ -191,8 +191,6 @@
 					o.position.set(position.x, position.y, position.z);
 					ai.push(o);
 					scene.add(o);
-
-                    console.log(position);
                 }
 
                 miniMap.draw(x, y, map[y][x]);
@@ -247,8 +245,8 @@
     for (var i = bullets.length-1; i >= 0; i--) {
 		var b = bullets[i], p = b.position, d = b.ray.direction;
 
-		var tx = Math.abs(Math.floor(((cameraHelper.origin.x + (b.position.x * -1)) / 100)));
-        var ty = Math.abs(Math.floor(((cameraHelper.origin.z + (b.position.z * -1)) / 100)));
+		var tx = Math.abs(Math.floor(((cameraHelper.origin.x + (b.position.x * -1) + 50) / 100)));
+        var ty = Math.abs(Math.floor(((cameraHelper.origin.z + (b.position.z * -1) + 50) / 100)));
 
 		if (map[ty][tx] == 2) {
 			bullets.splice(i, 1);
