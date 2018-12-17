@@ -424,6 +424,15 @@
         } else {
             //nabrak
         }
+
+        for (var i = ai.length-1; i >= 0; i--) {
+			var a = ai[i];
+
+			if((camera.position.x-40 <= a.position.x && a.position.x <= camera.position.x+40) && (camera.position.z-40 <= a.position.z && a.position.z <= camera.position.z+40)) {
+				running = false;
+				
+			}
+		}
     }
 
     function mainLoop(time) {
