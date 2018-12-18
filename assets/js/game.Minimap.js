@@ -83,6 +83,11 @@ game.Gui.MiniMap = function(width, height, parent) {
         this.enemyPosition.y[num] = newEnemyPosition.y;
     };
 
+    this.deleteEnemy = function(num,enemyPos) {
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(this.enemyPosition.x[num] * this.blockSize.width, this.enemyPosition.y[num] * this.blockSize.height, this.blockSize.width, this.blockSize.height);
+    }
+
     this.drawAt = function(x, y, color) {
         this.ctx.fillStyle = color;
         this.ctx.fillRect(x * this.blockSize.width, y * this.blockSize.height, this.blockSize.width, this.blockSize.height);
