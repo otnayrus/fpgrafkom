@@ -4,7 +4,7 @@ game.GameHelper = game.GameHelper || {};
 game.GameHelper.LevelHelper = function(start, end) {
     this.current = start || 1;
     this.next = this.current + 1;
-    this.count = end || 3;
+    this.count = end || 1;
     this.isFinished = true;
 
     this.getNext = function() {
